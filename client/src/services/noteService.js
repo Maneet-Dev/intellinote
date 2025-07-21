@@ -35,21 +35,13 @@ export const deleteNote = async (id, token) => {
 };
 
 // Improve note using Gemini AI
-export const improveNote = async (content, token) => {
-  const res = await fetch('/api/notes/improve', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ content })
-  });
+export const improveNote = async (content, token, customPrompt = null) => {
+  const res = await axios.post(`${API_URL}/improve`, 
+    { content, customPrompt },
+    {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-  if (!res.ok) {
-    throw new Error('Failed to improve note');
-  }
-
-  const data = await res.json();
-  return data; // full response { improved: ... }
+  return res.data; // full response { improved: ... }
 };
 

@@ -21,9 +21,7 @@ export default function Dashboard() {
   const [improvingNoteId, setImprovingNoteId] = useState(null);
   const [improvedContent, setImprovedContent] = useState('');
   const [showPromptSettings, setShowPromptSettings] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState(() => {
-    return localStorage.getItem('customAIPrompt') || 'Improve this text with better grammar and clarity:';
-  });
+  const [customPrompt, setCustomPrompt] = useState('Improve this text with better grammar and clarity:');
 
   useEffect(() => {
     if (!token) return;
@@ -57,13 +55,10 @@ export default function Dashboard() {
     if (activeNote) {
       setModalTitle(activeNote.title);
       setModalContent(activeNote.content);
-      // Only reset modalEditMode if we're not explicitly setting it to true
-      if (!modalEditMode) {
-        setModalEditMode(false);
-      }
+      setModalEditMode(false);
       setImprovedContent('');
     }
-  }, [activeNote, modalEditMode]);
+  }, [activeNote]);
 
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this note?');
@@ -83,39 +78,16 @@ export default function Dashboard() {
     }
   };
 
-  const handleImprove = async (note, isFromButton = false) => {
-    if (improvingNoteId) return; // Prevent multiple simultaneous improvements
-    
+  const handleImprove = async (note) => {
     setImprovingNoteId(note._id);
-    setError(''); // Clear any previous errors
-    
     try {
-      // If improving from button (not modal), show the modal first
-      if (isFromButton) {
-        setActiveNote(note);
-        setShowModal(true);
-      }
-      
-      const response = await improveNote(note.content, token, customPrompt);
+      const response = await improveNote(note.content, token);
       const improved = response.improved?.parts?.map(p => p.text).join('') || response.improved || '';
-      
-      if (!improved) {
-        throw new Error('No improvement suggestion received');
-      }
-      
       setImprovedContent(improved);
-      
-      // If not from button, we need to set these
-      if (!isFromButton) {
-        setActiveNote(note);
-        setShowModal(true);
-      }
-    } catch (err) {
-      setError('Failed to improve note. Please try again.');
-      if (isFromButton) {
-        setShowModal(false);
-        setActiveNote(null);
-      }
+      setActiveNote(note);
+      setShowModal(true);
+    } catch {
+      setError('Failed to improve note.');
     } finally {
       setImprovingNoteId(null);
     }
@@ -139,20 +111,6 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle saving the prompt settings
-  const handleSavePrompt = () => {
-    localStorage.setItem('customAIPrompt', customPrompt);
-    setShowPromptSettings(false);
-  };
-
-  // Handle resetting the prompt to default
-  const handleResetPrompt = () => {
-    const defaultPrompt = 'Improve this text with better grammar and clarity:';
-    setCustomPrompt(defaultPrompt);
-    localStorage.setItem('customAIPrompt', defaultPrompt);
-    setShowPromptSettings(false);
   };
 
   return (
@@ -191,7 +149,7 @@ export default function Dashboard() {
             <div
               key={note._id}
               className="group bg-white p-6 rounded-xl shadow-sm hover:shadow-xl cursor-pointer flex flex-col justify-between transition-all duration-200 border border-gray-100 hover:border-blue-200"
-              onClick={() => { setActiveNote(note); setModalEditMode(false); setShowModal(true); }}
+              onClick={() => { setActiveNote(note); setShowModal(true); }}
             >
               <div>
                 <div className="flex items-center justify-between mb-4">
@@ -209,7 +167,7 @@ export default function Dashboard() {
                       className="text-gray-600 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
                       title="Edit Note"
                     >
-                      <Edit size={16} className="opacity-100" />
+                      <Edit size={16} />
                     </button>
                     <button
                       onClick={(e) => {
@@ -230,7 +188,7 @@ export default function Dashboard() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleImprove(note, true);
+                    handleImprove(note);
                   }}
                   className={`w-full flex items-center justify-center gap-2 text-sm py-2 px-4 rounded-lg 
                     ${improvingNoteId === note._id
@@ -321,7 +279,7 @@ export default function Dashboard() {
                     {!improvedContent && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleImprove(activeNote, false)}
+                          onClick={() => handleImprove(activeNote)}
                           disabled={improvingNoteId === activeNote._id}
                           className={`text-gray-700 hover:text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 flex items-center gap-2 transition-colors
                             ${improvingNoteId === activeNote._id ? 'opacity-75 cursor-wait' : ''}`}
@@ -412,13 +370,15 @@ export default function Dashboard() {
 
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={handleResetPrompt}
+                    onClick={() => setShowPromptSettings(false)}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                   >
-                    Reset to Default
+                    Cancel
                   </button>
                   <button
-                    onClick={handleSavePrompt}
+                    onClick={() => {
+                      setShowPromptSettings(false);
+                    }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm hover:shadow"
                   >
                     Save Changes

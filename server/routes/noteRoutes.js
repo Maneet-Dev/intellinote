@@ -1,8 +1,12 @@
 const express = require('express');
 const Note = require('../models/Note');
 const authMiddleware = require('../middleware/authMiddleware');
+const { improveNote } = require('../controllers/geminiController');
 
 const router = express.Router();
+
+// Improve note with AI
+router.post('/improve', authMiddleware, improveNote);
 
 // Create a new note
 router.post('/', authMiddleware, async (req, res) => {
@@ -67,10 +71,5 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-const { improveNote } = require('../controllers/geminiController');
-
-router.post('/improve', authMiddleware, improveNote);
-
 
 module.exports = router;

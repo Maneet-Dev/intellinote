@@ -1,6 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.logo-text {
+  font-family: 'Orbitron', sans-serif;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  letter-spacing: 1px;
+}
+
+.logo-highlight {
+  color: #60A5FA;
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 700;
+}
 
 body {
   margin: 0;

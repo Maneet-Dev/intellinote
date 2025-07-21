@@ -16,6 +16,10 @@ const improveNoteFunctionDeclaration = {
         type: Type.STRING,
         description: 'Original note content',
       },
+      customPrompt: {
+        type: Type.STRING,
+        description: 'Custom prompt to override default prompt for note improvement',
+      },
     },
     required: ['content'],
   },
@@ -23,12 +27,13 @@ const improveNoteFunctionDeclaration = {
 
 exports.improveNote = async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, customPrompt } = req.body;
     if (!content) {
       return res.status(400).json({ message: 'Content is required' });
     }
 
-    const prompt = `What you receive is a note, just update the grammar, spelling mistakes and make it better in everyway. Do not provide suggestions, just update the note and provide only the content:\n\n${content}`;
+    const defaultPrompt = `What you receive is a note, just update the grammar, spelling mistakes and make it better in everyway. Do not provide suggestions, just update the note and provide only the content:`;
+    const prompt = `${customPrompt || defaultPrompt}\n\n${content}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
